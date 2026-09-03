@@ -1,0 +1,156 @@
+-- Comando para criar um database.
+CREATE DATABASE BDESTUDO;
+
+-- Comando para remover um database.
+DROP DATABASE BDESTUDO;
+
+-- Comando para criar Schema
+CREATE Schema
+
+---Criar tabela
+
+--CREATE TABLE NOMETABELA (
+--COLUNA1 - TIPODEDADOS [RESTRIÇÃO],
+--COLUNAN - TIPODEDADOS [RESTRIÇÃO],
+--PRIMARY KEY (COLUNA),      *Indica a coluna, ou conjunto de colunas, representativa da chave primária.
+--FOREIGN KEY (COLUNA) REFERENCES NOMETABELA (COLUNA)    *Sinaliza a coluna, ou conjunto de colunas, com restrição de chave estrangeira.
+--CONSTRAINT RESTRIÇÃO);          *Indica alguma restrição que poderá ser declarada.
+
+CREATE TABLE NIVEL(
+    CODIGONIVEL INT NOT NULL,
+    DESCRICAO VARCHAR(90) NOT NULL,
+    CONSTRAINT CHAVEPNIVEL PRIMARY KEY (CODIGONIVEL)
+);
+
+CREATE TABLE CURSO (
+    CODIGOCURSO INT NOT NULL,
+    NOME VARCHAR(90) NOT NULL UNIQUE,
+    DATACRIACAO DATE NULL,
+    CODIGONIVEL INT NULL,
+    CONSTRAINT CHAVEPCURSO PRIMARY KEY (CODIGOCURSO),
+    FOREIGN KEY (CODIGONIVEL) REFERENCES NIVEL (CODIGONIVEL)
+);
+
+
+---Inserir dados
+INSERT INTO clientes (nome, email, idade) VALUES ('João Silva', 'joao.silva@example.com', 30);
+INSERT INTO clientes (nome, email, idade) VALUES ('Maria Souza', 'maria.souza@example.com', 25);
+
+---Consultar Dados
+SELECT * FROM clientes;
+
+
+---Alterar tabela
+ALTER TABLE <NOMETABELA> ADD <COLUNA><TIPODEDADOS> ;
+-- Comando para alterar a tabela CURSO, adicionando coluna DTRECONH
+ALTER TABLE CURSO ADD DTRECONH DATE;
+
+-- Comando para remover uma coluna da tabela
+ALTER TABLE <NOMETABELA> DROP <COLUNA> ;
+-- Comando para alterar a tabela CURSO, removendo a coluna DTRECONH
+ALTER TABLE CURSO DROP DTRECONH ;
+
+
+---Remover Tabela
+DROP TABLE <NOMETABELA>;
+-- Comando para remover a tabela CURSO
+DROP TABLE CURSO;
+
+---Acrescentar constraint em coluna
+ALTER TABLE <tabela>nome ALTER COlUMN <coluna> SET <constraint>;
+
+---Renomear colunas
+ALTER TABLE <tabela> RENAME COlUMN <nome antigo> TO <nome novo>;
+
+---Remover coluna
+ALTER TABLE <tabela> DROP COLUMN <coluna>;
+
+---Acrescentar FK
+ALTER TABLE <tabela> ADD COlUMN <coluna><tipo> REFERENCES <tabela(coluna)>
+
+---Comando para remover a tabela NIVEL - remoção em cascata
+DROP TABLE NIVEL CASCADE;
+
+---insercao de linhas em tabela
+INSERT INTO <NOMETABELA> (COLUNA1, COLUNA2,…,COLUNAn) VALUES (VALOR1, VALOR2,…,VALORn);
+
+INSERT INTO CLIENTES (NOME, EMAIL, IDADE) VALUES ('João Silva', 'joao.silva@example.com', 31);
+ON CONFLICT (EMAIL) DO NOTHING; -- Condição de conflito para evitar duplicidade de email
+
+ON CONFLICT (EMAIL) DO UPDATE SET IDADE = EXCLUDED.IDADE; -- Condição de conflito para atualizar idade em caso de duplicidade de email
+
+---inserção apartir de outra tabela
+CREATE TABLE CLIENTES_BACKUP AS TABLE CLIENTES WITH NO DATA; -- Cria uma tabela de backup sem dados
+INSERT INTO CLIENTES_BACKUP (NOME, EMAIL, IDADE) --- Insere dados da tabela CLIENTES na tabela CLIENTES_BACKUP
+SELECT NOME, EMAIL, IDADE FROM CLIENTES WHERE IDADE >30;  -- Insere dados da tabela CLIENTES na tabela CLIENTES_BACKUP com condição de idade maior que 30
+
+---atualização de linhas em tabela
+UPDATE <NOMETABELA>
+SET COLUNA1 = VALOR1, COLUNA2 = VALOR2,…,COLUNAn = VALORn 
+WHERE CONDIÇÃO; --- sem a cláusula WHERE, todas as linhas da tabela serão atualizadas
+
+UPDATE DISCIPLINA SET CARGAHORARIA=70 WHERE CODIGODISCIPLINA=2; --- Atualiza a carga horária da disciplina com código 2 para 70
+UPDATE DISCIPLINA SET CARGAHORARIA=CARGAHORARIA*1.2; --- Atualiza a carga horária de todas as disciplinas, aumentando em 20%
+
+---alteração de constraint para update em chave estrangeira
+ALTER TABLE CURSODISCIPLINA
+DROP CONSTRAINTCURSODISCIPLINA_CURSO,
+ADD CONSTRAINT CURSODISCIPLINA_CURSO
+FOREIGN KEY (CODIGOCURSO) REFERENCES CURSO (CODIGOCURSO)
+ON UPDATE CASCADE ;
+
+---remoção de linhas em tabela
+DELETE FROM <NOMETABELA> WHERE CONDIÇÃO; --- sem a cláusula WHERE, todas as linhas da tabela serão removidas
+
+DELETE FROM DISCIPLINA WHERE CODIGODISCIPLINA=2; --- Remove a disciplina com código 2 da tabela DISCIPLINA
+
+---alteração de constraint para delete em chave estrangeira
+ALTER TABLE CURSODISCIPLINA 
+DROP CONSTRAINT CURSODISCIPLINA_DISCIPLINA,
+ADD CONSTRAINT CURSODISCIPLINA_DISCIPLINA
+FOREIGN KEY (CODIGODISCIPLINA) REFERENCES DISCIPLINA (CODIGODISCIPLINA)
+ON DELETE CASCADE ;
+
+
+---ESTRUTURA DE UMA TRANSAÇÃO
+
+BEGIN-- início da transação
+-- comandos
+COMMIT-- transação confirmada
+ROLLBACK-- transação cancelada
+END-- mesma função do COMMIT
+
+
+-- BEGIN implícito
+INSERT INTO CURSO (CODIGOCURSO,NOME,DATACRIACAO) VALUES (5,'Engenharia de Computação',NULL);
+-- COMMIT implícito
+
+--- BEGIN EXPLÍCITO 
+BEGIN; -- BEGIN explícito
+UPDATE DISCIPLINA SET CARGAHORARIA=CARGAHORARIA*1.2 WHERE CARGAHORARIA=60 --MUDANÇA DE CARGA HORÁRIA DE TODAS AS DISCIPLINAS COM CARGA HORÁRIA IGUAL A 60 PARA 72(20%)
+SELECT * FROM DISCIPLINA;
+UPDATE DISCIPLINA SET CARGAHORARIA=CARGAHORARIA*1.1 WHERE CARGAHORARIA=40; --MUDANÇA DE CARGA HORÁRIA DE TODAS AS DISCIPLINAS COM CARGA HORÁRIA IGUAL A 40 PARA 44(10%)
+SELECT * FROM DISCIPLINA;
+COMMIT; --COMMIT EXPLICITO
+
+---ROLLBACK EXPLICITO
+SELECT * FROM CURSO;
+BEGIN; -- BEGIN explícito
+INSERT INTO CURSO (CODIGOCURSO,NOME,DATACRIACAO) VALUES (6,'Engenharia de Produção',NULL);
+SELECT * FROM CURSO; --DADOS APÓS INSERÇÃO DE NOVO CURSO
+ROLLBACK;
+END; -- mesma função do COMMIT
+SELECT * FROM CURSO; --DADOS APÓS ROLLBACK
+
+---Exemplo de SAVEPOINT
+BEGIN;
+UPDATE DISCIPLINA SET CARGAHORARIA=CARGAHORARIA*1.2 WHERE CARGAHORARIA=60;
+SELECT * FROM DISCIPLINA;
+SAVEPOINT PONTO1; --CRIA UM PONTO DE SALVAMENTO
+UPDATE DISCIPLINA SET CARGAHORARIA=CARGAHORARIA*1.1 WHERE CARGAHORARIA=40;
+ROLLBACK TO PONTO1; --RETORNA AO PONTO DE SALVAMENTO
+SELECT * FROM DISCIPLINA;
+COMMIT;
+
+
+---Consultas com comando select
