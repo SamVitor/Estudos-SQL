@@ -154,3 +154,197 @@ COMMIT;
 
 
 ---Consultas com comando select
+
+--- Consultar colunas específicas de uma tabela
+SELECT COLUNA1 [[AS] APELIDOCOLUNA1],
+  COLUNA2 [[AS] APELIDOCOLUNA2],
+  …
+  COLUNAN [[AS] APELIDOCOLUNAN]
+FROM TABELA;
+
+SELECT CODIGOALUNO AS MATRICULA,
+NOME AS "NOME DO DISCENTE",
+DTNASCIMENTO AS DATA_DE_NASCIMENTO
+FROM ALUNO;
+
+--- Consultar colunas específicas de uma tabela com concatenação de colunas
+SELECT PRIM_NOME || '' || ULT_NOME AS 'NOME COMPLETO' FROM ALUNO;
+
+--- Consultar todas as colunas de uma tabela
+SELECT * FROM ALUNO;
+
+
+--- Funções de data e hora
+
+current_date --- data de hoje
+current_time --- hora do dia
+current_timestamp --- data e a hora
+extract (campo from fonte) --- subcampos de data e hora: século, ano, dia, mês
+
+SELECT CURRENT_DATE AS "Data Atual",
+    CURRENT_TIME AS "Hora Atual",
+    CURRENT_TIMESTAMP "Data e Hora atuais",
+    EXTRACT( DOY FROM CURRENT_DATE) AS "Dia do ano",
+-- Day of Week ->DOW 0 - domingo, 1 - segunda, ..., 6 - sábado
+    EXTRACT( DOW FROM CURRENT_DATE) AS "Dia da semana",
+    EXTRACT( DAY FROM CURRENT_DATE) AS "Dia Atual",
+    EXTRACT( MONTH FROM CURRENT_DATE) AS "Mês Atual",
+    EXTRACT( YEAR FROM CURRENT_DATE) AS "Ano Atual",
+    EXTRACT( CENTURY FROM CURRENT_DATE) AS "Século Atual";
+
+--- Função CASE WHEN para retornar o nome do dia da semana
+SELECT CASE WHEN extract(dow from current_date) = 0 THEN 'domingo'
+    WHEN extract(dow from current_date) = 1 THEN 'segunda-feira'
+    WHEN extract(dow from current_date) = 2 THEN 'terça-feira'
+    WHEN extract(dow from current_date) = 3 THEN 'quarta-feira'
+    WHEN extract(dow from current_date) = 4 THEN 'quinta-feira'
+    WHEN extract(dow from current_date) = 5 THEN 'sexta-feira'
+    WHEN extract(dow from current_date)=6 THEN 'sábado'
+END AS "Nome do dia da semana";
+
+--- Função AGE para calcular a idade do aluno
+SELECT NOME,
+    DTNASCIMENTO,
+    AGE(DTNASCIMENTO) AS "Idade [ano/mês/dia]",
+    EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) AS "Idade do Aluno"
+FROM ALUNO;
+
+--- Função CASE WHEN para retornar a faixa etária do aluno
+SELECT NOME,
+    EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) AS "Idade do Aluno",
+    CASE WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) <=20 THEN '1. até 20 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 21 AND 30 THEN '2. 21 a 30 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 31 AND 40 THEN '3. 31 a 40 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 41 AND 50 THEN '4. 41 a 50 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 51 AND 60 THEN '5. 51 a 60 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) > 60 THEN '6. mais de 60 anos'
+    END AS "Faixa Etária"
+FROM ALUNO;
+
+--- Funções de resumo ou de agregação
+
+COUNT(COLUNA) --- Conta o número de linhas da coluna especificada
+COUNT(*) --- Conta o número de linhas da tabela
+MIN(COLUNA/EXPRESSÃO) --- Retorna o menor valor da coluna especificada ou expressão
+MAX(COLUNA/EXPRESSÃO) --- Retorna o maior valor da coluna especificada ou expressão
+SUM(COLUNA/EXPRESSÃO) --- Retorna a soma dos valores da coluna especificada ou expressão
+AVG(COLUNA/EXPRESSÃO) --- Retorna a média dos valores da coluna especificada ou expressão
+STDDEV(COLUNA/EXPRESSÃO) --- Retorna o desvio padrão dos valores da coluna especificada ou expressão
+VARIANCE(COLUNA/EXPRESSÃO) --- Retorna a variância dos valores da coluna especificada ou expressão
+
+SELECT
+    COUNT(*) AS "Número de alunos",
+    MIN(EXTRACT(YEAR FROM AGE(DTNASCIMENTO))) AS "Menor Idade",
+    AVG(EXTRACT(YEAR FROM AGE(DTNASCIMENTO))) AS "Idade Média",
+    MAX(EXTRACT(YEAR FROM AGE(DTNASCIMENTO))) AS "Maior Idade",
+    SUM(EXTRACT(YEAR FROM AGE(DTNASCIMENTO))) AS "Soma Idade"
+FROM ALUNO;
+
+--- Formas de Consulta
+--- A tabela TTESTE será criada com os dados da tabela ALUNO para fins de consulta direta e estatica dos resultados. 
+CREATE TABLE TTESTE AS
+SELECT NOME,
+    EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) AS "Idade do Aluno",
+    CASE WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) <=20 THEN '1. até 20 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 21 AND 30 THEN '2. 21 a 30 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 31 AND 40 THEN '3. 31 a 40 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 41 AND 50 THEN '4. 41 a 50 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 51 AND 60 THEN '5. 51 a 60 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) > 60 THEN '6. mais de 60 anos'
+    END AS "Faixa Etária"
+FROM ALUNO;
+
+--- Criação de uma VIEW com os resultados para fins de consulta direta de forma dinamica.
+
+CREATE VIEW VTESTE AS
+SELECT NOME,
+    EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) AS "Idade do Aluno",
+    CASE WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) <=20 THEN '1. até 20 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 21 AND 30 THEN '2. 21 a 30 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 31 AND 40 THEN '3. 31 a 40 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 41 AND 50 THEN '4. 41 a 50 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) BETWEEN 51 AND 60 THEN '5. 51 a 60 anos'
+        WHEN EXTRACT(YEAR FROM AGE(DTNASCIMENTO)) > 60 THEN '6. mais de 60 anos'
+    END AS "Faixa Etária"
+FROM ALUNO;
+
+
+--- Clausula WHERE para filtrar os resultados de uma consulta
+
+SELECT NOME, DTNASCIMENTO, SEXO
+FROM ALUNO
+WHERE SEXO = 'F';
+--- AND
+SELECT NOME, DTNASCIMENTO, SEXO
+FROM ALUNO
+WHERE SEXO = 'F' AND EXTRACT (MONTH FROM DTNASCIMENTO)=11;
+
+--- IN (DENTRO DE)
+SELECT NOME, DTNASCIMENTO, SEXO
+FROM ALUNO
+WHERE EXTRACT (MONTH FROM DTNASCIMENTO) IN (7,8,9,10);
+
+--- BETWEEN (ENTRE)
+SELECT NOME, DTNASCIMENTO, SEXO
+FROM ALUNO
+WHERE EXTRACT (YEAR FROM DTNASCIMENTO) BETWEEN 1985 AND 2005;
+
+--- LIKE (PARECIDO COM)
+SELECT NOME
+FROM ALUNO
+WHERE NOME LIKE '%COSTA%'; --- IMPORTANTE: O caractere % representa qualquer sequência de caracteres, incluindo uma sequência vazia. O caractere _ representa um único caractere.
+
+--- Funções de manipulação de strings
+LOWER(NOME) --- Converte o valor da coluna NOME para letras minúsculas
+UPPER(NOME) --- Converte o valor da coluna NOME para letras maiúsculas
+
+--- IS NULL (NULO) e IS NOT NULL (NÃO NULO)
+SELECT *
+FROM ALUNO
+WHERE EMAIL IS NOT NULL
+
+--- ORDER BY (ORDENAR POR) ASC/DESC(ASCENDENTE/DESCENDENTE )
+SELECT *
+FROM ALUNO
+ORDER BY DTNASCIMENTO ASC
+
+SELECT NOME
+FROM ALUNO
+ORDER BY EXTRACT(MONTH FROM DTNASCIMENTO),NOME;
+
+--- Agrupamento de resultados com GROUP BY
+
+--- Agrupar a quantidade de funcionarios por sexo
+SELECT
+     (SELECT COUNT(*) AS "M" FROM FUNCIONARIO WHERE SEXO='M' ),
+     (SELECT COUNT (*) AS "F" FROM FUNCIONARIO WHERE SEXO='F' );
+
+--- com GROUP BY
+SELECT SEXO, COUNT(*) AS QUANTIDADE
+FROM FUNCIONARIO
+GROUP BY SEXO;
+
+--- Media salarial por sexo
+SELECT SEXO,
+    AVG(SALARIO) AS MEDIASALARIAL
+FROM FUNCIONARIO
+GROUP BY SEXO;
+
+--- Agrupar a quantidade de funcionarios por mês de nascimento e exibir o menor, maior e média salarial
+SELECT EXTRACT(MONTH FROM DTNASCIMENTO) AS MES,
+    COUNT(*) AS QUANTIDADE,
+    MIN(SALARIO) AS MENORSALARIO,
+    ROUND(AVG(SALARIO)::NUMERIC,0) AS SALARIOMEDIO,
+    MAX(SALARIO) AS MAIORSALARIO
+FROM FUNCIONARIO
+GROUP BY EXTRACT(MONTH FROM DTNASCIMENTO)
+ORDER BY EXTRACT(MONTH FROM DTNASCIMENTO);
+
+--- Clausula HAVING para filtrar os resultados de uma consulta com GROUP BY
+SELECT EXTRACT(MONTH FROM DTNASCIMENTO) AS MES,
+    COUNT(*) AS QUANTIDADE,
+    SUM(SALARIO*0.05) AS TOTALBONUS
+FROM FUNCIONARIO
+GROUP BY EXTRACT(MONTH FROM DTNASCIMENTO)
+HAVING COUNT(*)>1
+ORDER BY EXTRACT(MONTH FROM DTNASCIMENTO);
